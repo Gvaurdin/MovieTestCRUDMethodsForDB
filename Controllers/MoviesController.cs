@@ -11,6 +11,11 @@ using MovieTestCRUDMethodsForDB.ViewModel;
 
 namespace MovieTestCRUDMethodsForDB.Controllers
 {
+    public enum SortMovieState
+    {
+        AskTitle,
+        DescTitle
+    }
     public enum Filter
     {
         Ask,
@@ -19,6 +24,7 @@ namespace MovieTestCRUDMethodsForDB.Controllers
     public class MoviesController : Controller
     {
         private readonly MovieContext _context;
+        private const int pageSize = 3;
 
         public MoviesController(MovieContext context)
         {
@@ -26,52 +32,101 @@ namespace MovieTestCRUDMethodsForDB.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index(Filter? selectPriceFilter,Filter? selectFilter, string movieGenre,string searchNameString)
+        //public async Task<IActionResult> Index(Filter? selectPriceFilter,Filter? selectFilter, string movieGenre,string searchNameString)
+        //{
+        //    var genres = from g in _context.Movies
+        //                 orderby g.Genre
+        //                 select g.Genre;
+        //    var movies = from m in _context.Movies
+        //                 select m;
+        //    if(!string.IsNullOrEmpty(searchNameString))
+        //    {
+        //        movies = movies.Where(movie => movie.Title.ToUpper().Contains(searchNameString.ToUpper()));
+        //    }
+
+        //    if(selectFilter is not null)
+        //    {
+        //        if(selectFilter == Filter.Ask)
+        //        {
+        //            movies = movies.OrderBy(movie => movie.Title);
+        //        }
+        //        else
+        //        {
+        //            movies = movies.OrderByDescending(movie => movie.Title);
+        //        }
+        //    }
+
+        //    if (selectPriceFilter is not null)
+        //    {
+        //        if (selectPriceFilter == Filter.Ask)
+        //        {
+        //            movies = movies.OrderBy(movie => movie.Price);
+        //        }
+        //        else
+        //        {
+        //            movies = movies.OrderByDescending(movie => movie.Price);
+        //        }
+        //    }
+
+        //    if (!string.IsNullOrEmpty(movieGenre))
+        //    {
+        //        movies = movies.Where(movie => movie.Genre == movieGenre);
+        //    }
+        //    var movieGenreVM = new MovieGenreViewModel
+        //    {
+        //        Genres = new SelectList(await genres.Distinct().ToListAsync()),
+        //        Movies = await movies.ToListAsync()
+        //    };
+        //    return View(movieGenreVM);
+        //}
+
+        public async Task<IActionResult> Index(string selectedMovieGenre, string selectedMovieTitle, SortMovieState sortMovieState, int page = 1)
         {
-            var genres = from g in _context.Movies
-                         orderby g.Genre
-                         select g.Genre;
-            var movies = from m in _context.Movies
-                         select m;
-            if(!string.IsNullOrEmpty(searchNameString))
+            IQueryable<Movie> movies = _context.Movies;
+            if(!string.IsNullOrEmpty(selectedMovieTitle))
             {
-                movies = movies.Where(movie => movie.Title.ToUpper().Contains(searchNameString.ToUpper()));
+                movies = movies.Where(m => m.Title.ToUpper().Contains(selectedMovieTitle.ToUpper()));
             }
 
-            if(selectFilter is not null)
+            if (!string.IsNullOrEmpty(selectedMovieGenre))
             {
-                if(selectFilter == Filter.Ask)
-                {
-                    movies = movies.OrderBy(movie => movie.Title);
-                }
-                else
-                {
-                    movies = movies.OrderByDescending(movie => movie.Title);
-                }
+                movies = movies.Where(m => m.Genre == selectedMovieGenre);
             }
 
-            if (selectPriceFilter is not null)
+            /* Продвинутый вариант */
+            movies = sortMovieState switch
             {
-                if (selectPriceFilter == Filter.Ask)
-                {
-                    movies = movies.OrderBy(movie => movie.Price);
-                }
-                else
-                {
-                    movies = movies.OrderByDescending(movie => movie.Price);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(movieGenre))
-            {
-                movies = movies.Where(movie => movie.Genre == movieGenre);
-            }
-            var movieGenreVM = new MovieGenreViewModel
-            {
-                Genres = new SelectList(await genres.Distinct().ToListAsync()),
-                Movies = await movies.ToListAsync()
+                SortMovieState.AskTitle => movies.OrderBy(m => m.Title),
+                SortMovieState.DescTitle => movies.OrderByDescending(m => m.Title),
+                _ => movies // по умолчанию 
             };
-            return View(movieGenreVM);
+
+            /* Вариант обычный*/
+            //if(sortMovieState is not null)
+            //{
+            //    if(sortMovieState.Value == SortMovieState.AskTitle)
+            //    {
+            //        movies.OrderBy(m => m.Title);
+            //    }
+            //    else
+            //    {
+            //        movies.OrderByDescending(m => m.Title);
+            //    }
+            //}
+
+            var moviesResult = await movies.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var genres = new SelectList(_context.Movies.Select(m => m.Genre).Distinct());
+            var count = await movies.CountAsync();
+
+            var moviesViewModel = new MoviesViewModel
+            {
+                PageViewModel = new(count,page,pageSize),
+                SortViewModel = new(sortMovieState),
+                FilteredViewModel = new(genres,selectedMovieGenre,selectedMovieTitle),
+                Movies = moviesResult
+            };
+
+            return View(moviesViewModel);
         }
 
         // GET: Movies/Details/5

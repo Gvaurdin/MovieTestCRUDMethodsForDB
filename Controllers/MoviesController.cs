@@ -7,9 +7,15 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MovieTestCRUDMethodsForDB.Data;
 using MovieTestCRUDMethodsForDB.Models;
+using MovieTestCRUDMethodsForDB.ViewModel;
 
-namespace MovieTestCRUDMethodsForDB.Views.Movies
+namespace MovieTestCRUDMethodsForDB.Controllers
 {
+    public enum Filter
+    {
+        Ask,
+        Desc
+    }
     public class MoviesController : Controller
     {
         private readonly MovieContext _context;
@@ -20,9 +26,52 @@ namespace MovieTestCRUDMethodsForDB.Views.Movies
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(Filter? selectPriceFilter,Filter? selectFilter, string movieGenre,string searchNameString)
         {
-            return View(await _context.Movies.ToListAsync());
+            var genres = from g in _context.Movies
+                         orderby g.Genre
+                         select g.Genre;
+            var movies = from m in _context.Movies
+                         select m;
+            if(!string.IsNullOrEmpty(searchNameString))
+            {
+                movies = movies.Where(movie => movie.Title.ToUpper().Contains(searchNameString.ToUpper()));
+            }
+
+            if(selectFilter is not null)
+            {
+                if(selectFilter == Filter.Ask)
+                {
+                    movies = movies.OrderBy(movie => movie.Title);
+                }
+                else
+                {
+                    movies = movies.OrderByDescending(movie => movie.Title);
+                }
+            }
+
+            if (selectPriceFilter is not null)
+            {
+                if (selectPriceFilter == Filter.Ask)
+                {
+                    movies = movies.OrderBy(movie => movie.Price);
+                }
+                else
+                {
+                    movies = movies.OrderByDescending(movie => movie.Price);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(movie => movie.Genre == movieGenre);
+            }
+            var movieGenreVM = new MovieGenreViewModel
+            {
+                Genres = new SelectList(await genres.Distinct().ToListAsync()),
+                Movies = await movies.ToListAsync()
+            };
+            return View(movieGenreVM);
         }
 
         // GET: Movies/Details/5

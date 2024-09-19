@@ -1,4 +1,5 @@
-﻿@model IEnumerable<MovieTestCRUDMethodsForDB.Models.Movie>
+﻿@using MovieTestCRUDMethodsForDB.ViewModel
+@model MovieGenreViewModel
 
 @{
     ViewData["Title"] = "Index";
@@ -9,26 +10,47 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+<form asp-controller="Movies" asp-action="Index" method="get">
+    Жанр:
+    <select asp-for="MovieGenre" asp-items="Model.Genres">
+        <option value="">Все</option>
+    </select>
+    Фильтр:
+    <select asp-for="Selectfilter">
+        <option value="">Все</option>
+        <option value="Ask">От А до Я</option>
+        <option value="Desc">От Я до А</option>
+    </select>
+    Фильтр цены:
+    <select asp-for="SelectPriceFilter">
+        <option value="">Все</option>
+        <option value="Ask">По возрастанию</option>
+        <option value="Desc">По убыванию</option>
+    </select>
+    Название:
+    <input type="text" asp-for="SearchNameString" />
+    <input type="submit" value="Поиск" />
+</form>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Title)
+                @Html.DisplayNameFor(model => model.Movies[0].Title)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ReleaseDate)
+                @Html.DisplayNameFor(model => model.Movies[0].ReleaseDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Genre)
+                @Html.DisplayNameFor(model => model.Movies[0].Genre)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Price)
+                @Html.DisplayNameFor(model => model.Movies[0].Price)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.Movies) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Title)

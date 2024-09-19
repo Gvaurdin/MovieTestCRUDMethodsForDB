@@ -101,11 +101,66 @@
     </tbody>
 </table>
 
+@{
+    const string Disabled = "disabled";
+    const string Active = "active";
+    string isDisabledPreviousPage = string.Empty;
+    if (!Model.Movies.HasPreviousPage)
+    {
+        isDisabledPreviousPage = Disabled;
+    }
 
-@if (Model.PageViewModel.HasPreviousPage)
+    string isDisabledNextPage = string.Empty;
+    if (!Model.Movies.HasNextPage)
+    {
+        isDisabledNextPage = Disabled;
+    }
+}
+<nav>
+    <ul class="pagination">
+        <li class="page-item @isDisabledPreviousPage">
+            <a asp-action="Index"
+               asp-route-page="@(Model.Movies.PageIndex - 1)" asp-route-sortMovieState="@(Model.SortViewModel. MovieTitleSort)"
+               asp-route-selectedMovieGenre="@(Model.FilteredViewModel.SelectedMovieGenre)"
+               asp-route-selectedMovieTitle="@(Model.FilteredViewModel.SelectedMovieTitle)"
+               class="page-link" tabindex="-1"
+               aria-disabled="@Model.Movies.HasPreviousPage">Назад</a>
+        </li>
+        @for (int indexPage = 1; indexPage <= Model.Movies.TotalPages; indexPage++)
+        {
+            string isActive = string.Empty;
+            @if (indexPage == Model.Movies.PageIndex)
+            {
+                isActive = Active;
+            }
+
+            <li class="page-item @isActive">
+                <a asp-action="Index"
+                   asp-route-page="@indexPage"
+                   asp-route-sortMovieState="@(Model.SortViewModel. MovieTitleSort)"
+                   asp-route-selectedMovieGenre="@(Model.FilteredViewModel.SelectedMovieGenre)"
+                   asp-route-selectedMovieTitle="@(Model.FilteredViewModel.SelectedMovieTitle)"
+                   class="page-link">@indexPage</a>
+            </li>
+
+        }
+
+        <li class="page-item @isDisabledNextPage">
+            <a asp-action="Index"
+               asp-route-page="@(Model.Movies.PageIndex + 1)"
+               asp-route-sortMovieState="@(Model. SortViewModel. MovieTitleSort)"
+               asp-route-selectedMovieGenre="@(Model.FilteredViewModel.SelectedMovieGenre)"
+               asp-route-selectedMovieTitle="@(Model.FilteredViewModel.SelectedMovieTitle)"
+               class="page-link"
+               aria-disabled="@Model.Movies.HasNextPage">Вперед</a>
+        </li>
+    </ul>
+</nav>
+
+@* @if (Model.Movies.HasPreviousPage)
 {
     <a asp-action="Index"
-       asp-route-page="@(Model.PageViewModel.PageNumber - 1)" asp-route-sortMovieState="@(Model.SortViewModel. MovieTitleSort)"
+       asp-route-page="@(Model.Movies.PageIndex - 1)" asp-route-sortMovieState="@(Model.SortViewModel. MovieTitleSort)"
        asp-route-selectedMovieGenre="@(Model.FilteredViewModel.SelectedMovieGenre)"
        asp-route-selectedMovieTitle="@(Model.FilteredViewModel.SelectedMovieTitle)" class="btn btn-outline-dark">
         <i class="glyphicon glyphicon-chevron-left"></i>
@@ -114,10 +169,10 @@
 }
 
 
-@if (Model.PageViewModel.HasNextPage)
+@if (Model.Movies.HasNextPage)
 {
     <a asp-action="Index"
-       asp-route-page="@(Model.PageViewModel.PageNumber + 1)"
+       asp-route-page="@(Model.Movies.PageIndex + 1)"
        asp-route-sortMovieState="@(Model. SortViewModel. MovieTitleSort)"
        asp-route-selectedMovieGenre="@(Model.FilteredViewModel.SelectedMovieGenre)"
        asp-route-selectedMovieTitle="@(Model.FilteredViewModel.SelectedMovieTitle)"
@@ -125,4 +180,4 @@
         Вперед
         <i class="glyphicon glyphicon-chevron-right"></i>
     </a>
-}
+} *@

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MovieTestCRUDMethodsForDB.Core;
 using MovieTestCRUDMethodsForDB.Data;
 using MovieTestCRUDMethodsForDB.Models;
 using MovieTestCRUDMethodsForDB.ViewModel;
@@ -114,16 +115,13 @@ namespace MovieTestCRUDMethodsForDB.Controllers
             //    }
             //}
 
-            var moviesResult = await movies.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             var genres = new SelectList(_context.Movies.Select(m => m.Genre).Distinct());
-            var count = await movies.CountAsync();
 
             var moviesViewModel = new MoviesViewModel
             {
-                PageViewModel = new(count,page,pageSize),
                 SortViewModel = new(sortMovieState),
                 FilteredViewModel = new(genres,selectedMovieGenre,selectedMovieTitle),
-                Movies = moviesResult
+                Movies = await PaginationList<Movie>.CreateAsync(movies,page,pageSize)
             };
 
             return View(moviesViewModel);
